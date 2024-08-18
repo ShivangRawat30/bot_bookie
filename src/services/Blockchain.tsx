@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import { toast } from 'react-toastify'
-import { BotStruct } from '../store/type.dt'
+import { BotStruct, UserStruct } from '../store/type.dt'
 
 const toWei = (num: number) => ethers.parseEther(num.toString())
 const fromWei = (num: number) => ethers.formatEther(num)
@@ -37,7 +37,7 @@ const sendEthToEveryBot = async (bots: BotStruct[]) => {
         for (const bot of bots) {
             const amount = toWei(0.00001);
             const tx = {
-                to: bot.publicKey,
+                to: bot.owner,
                 value: amount,
             };
 
@@ -51,20 +51,21 @@ const sendEthToEveryBot = async (bots: BotStruct[]) => {
     }
 };
 
-const getBalances = async(bots: BotStruct[]) => {
+const getBalances = async(bots: UserStruct[]) => {
     const provider = new ethers.BrowserProvider(ethereum)
     const balances = await Promise.all(
         bots.map(async (bot) => {
-          const balance = await provider.getBalance(bot.publicKey);
+          const balance = await provider.getBalance(bot.owner);
           return {
-            publicKey: bot.publicKey,
+            publicKey: bot.owner,
             balance: fromWei(balance)
           };
         })
     );
-    console.log(balances)
+    // console.log(balances)
       return (balances.reduce((acc, bot) => ({ ...acc, [bot.publicKey]: bot.balance }), {}));;
 }
+
 export{
     sendEthToBot,
     getBalances,

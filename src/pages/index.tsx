@@ -6,32 +6,38 @@ import styles from '../styles/Home.module.css';
 import   
  AllBots from '../components/AllBots'; // Import the AllBots component
 import { BotStruct, RootState } from '../store/type.dt';
-import { createBot, getAllBots } from "../services/ServerCall";
+import { createBot, getAllBots, getBotUser } from "../services/ServerCall";
 import { useDispatch, useSelector } from 'react-redux';
 import { sendEthToEveryBot } from '../services/Blockchain';
+import { globalActions } from '../store/globalSlices';
+import { toast } from 'react-toastify';
 
 const Home: NextPage = () => {
-  const { Bots } = useSelector((states: RootState) => states.globalStates);
-  const [bots, setBots] = useState([]);
+  const { Bots, users } = useSelector((states: RootState) => states.globalStates);
+
+const {setBots,setBot,setUsers} =  globalActions;
   const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchBots = async () => {
-      const data = await getAllBots();
-      setBots(data);
+      const botData = await getBotUser();
+      setUsers(botData);
+      
     };
     fetchBots();
   }, []);
+  console.log(users)
 
   const handleCreateNewBot = async () => {
     await createBot();
-    const data = await getAllBots();
-      setBots(data);
+    const data = await getBotUser();
+    setUsers(data);
+    toast.success("New Bot Created");
   }
   const handleSendEth = async() => {
-    await sendEthToEveryBot(bots);
+    await sendEthToEveryBot(Bots);
     const data = await getAllBots();
-    setBots(data);
+    setUsers(data);
   }
 
   return (
@@ -55,7 +61,7 @@ const Home: NextPage = () => {
           {/* <button onClick={handleSendEth} className='inline-flex w-[90%] justify-center rounded-lg bg-cyan-600 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-cyan-700 focus:outline-none focus:ring-4 focus:ring-cyan-200 dark:focus:ring-cyan-900'>Send eth to every bot</button> */}
           </div>
           {Bots.length > 0 && ( // Conditionally render bot information
-            <AllBots bots={bots} /> // Pass bots data to the AllBots component
+            <AllBots bots={users} /> // Pass bots data to the AllBots component
           )}
         </div>
 

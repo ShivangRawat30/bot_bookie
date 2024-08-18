@@ -3,8 +3,16 @@ const { ethers } = require("ethers");
 const CryptoJS = require("crypto-js");
 const address = require("../contractAddress.json");
 const randomColor = require("randomcolor");
-const generateUsername = require("unique-username-generator");
+const axios = require("axios");
+const abi = require('../abi.json')
+const { generateFromEmail, uniqueUsernameGenerator } = require("unique-username-generator");
 
+const superCharacters = ["Solarion", "Terraformer","Superman", "Batman", "Wonder Woman", "The Flash", "Green Lantern", "Aquaman", "Martian Manhunter", "Cyborg", "Green Arrow", "Hawkgirl", "Nightwing", "Batgirl", "Supergirl", "Shazam", "Booster Gold", "Blue Beetle", "Firestorm", "Atom", "Black Canary", "Zatanna", "Plastic Man", "Elongated Man", "Vixen", "Captain Marvel", "Doctor Fate", "Deadman", "Swamp Thing", "Animal Man", "Starfire", "Raven","Lex Luthor", "The Joker", "Brainiac", "Sinestro", "Black Manta", "Cheetah", "Darkseid", "Doomsday", "Deathstroke", "Reverse-Flash", "Captain Cold", "Heat Wave", "Gorilla Grodd", "Poison Ivy", "Scarecrow", "Bane", "Harley Quinn", "Two-Face", "Penguin", "Riddler", "Catwoman", "Black Adam", "Circe", "Ocean Master", "Trigon", "Deathstroke", "Black Mask", "Mr. Freeze", "Killer Croc", "Mad Hatter", "Beast Boy", "Quantum Leap", "Chronomaster", "Nebula", "Echo", "Void", "Zephyr", "Ignis", "Hydro", "Electra", "Cryogen", "Titan", "Velocity", "Mindwarp", "Illusionist", "Invincible", "Healer", "Animalia", "Technopath", "Astronaut", "Phaser", "Invisible", "Soundwave", "Elastic", "Forcefield", "Regenerator", "Shapeshifter", "Telepath", "Telekinetic","Nemesis", "Chaos", "Dominator", "Phantom", "Corruptor", "Conqueror", "Mutator", "Mindbender", "Reaper", "Infector", "Inferno", "Tempest", "Shadowlord", "Enigma", "Overlord", "Destructor", "Manipulator", "Nightmare", "Parasite", "Toxic"]
+const config = {
+    dictionaries: [superCharacters],
+    style: 'capital',
+    randomDigits: 2 
+  }
 const botController = {};
 
 botController.createBot = async (req, res) => {
@@ -35,15 +43,13 @@ botController.createBot = async (req, res) => {
 };
 const createUser = async (owner) => {
   try {
-    const name = generateUsername();
-    const response = await axios.post("http://127.0.0.1:4001/api/v1/create", {
+    console.log("Creating user");
+    const name = uniqueUsernameGenerator(config);
+    const response = await axios.post("http://127.0.0.1:4000/api/v1/create", {
       name,
       owner,
-      totalLotteryPlayed: 0,
-      totalWins: 0,
-      totalAmount: 0,
-      totalWinAmount: 0,
     });
+
   } catch (error) {
     console.log(error);
   }
@@ -53,6 +59,7 @@ const createUser = async (owner) => {
 botController.getAllBots = async (req, res) => {
   try {
     const bots = await Bot.find({});
+    
     res.status(200).json(bots);
   } catch (error) {
     console.error(error);
@@ -86,17 +93,18 @@ const ownerContract = async () => {
 
 botController.enterLotteries = async(req, res) => {
   try {
-    const { publicKey, amount, max } = req.params;
+    const { publicKey, max } = req.params;
+    console.log(publicKey, max);
     const contract = await ownerContract();
     let number = 1;
     while (number <= max) {
       contract.on(
         "LotteryCreated",
         (status, id, prize, ticketPrice, participants, winner, expiresAt) => {
-          handleLotteryCreated(publicKey, amount, id);
+          handleLotteryCreated(publicKey, id);
         }
       );
-      saveLott
+      
       number++;
     }
   } catch (error) {
@@ -105,31 +113,17 @@ botController.enterLotteries = async(req, res) => {
   }
 };
 
-const enterLottery = async (lotteryId, owner, totalAmount) => {
-  let color = randomColor();
-  try {
-    await axios.put("http://127.0.0.1:4001/api/v1/lottery/enter", {
-      lotteryId,
-      owner,
-      totalAmount,
-      color,
-    });
-  } catch (error) {
-    toast.error("error occured");
-    console.log(error);
-  }
-};
 
-const handleLotteryCreated = async (publicKey, amount, id) => {
-  console.log(publicKey, amount);
+const handleLotteryCreated = async (publicKey, id) => {
+  console.log(publicKey);
   try {
     // wait 30sec
     await new Promise((resolve) => setTimeout(resolve, 30000));
-    const bot = await Bot.findOne({ publicKey: req.params.id });
+    const bot = await Bot.findOne({ publicKey });
     // enter blockchain lottery
     const secretKey = CryptoJS.AES.decrypt(
-        bot.privateKey,
-        process.env.PASSPHRASE
+      bot.privateKey,
+      process.env.PASSPHRASE
     ).toString();
     
     const provider = new ethers.JsonRpcProvider(process.env.ALCHEMY_PROVIDER);
@@ -139,8 +133,23 @@ const handleLotteryCreated = async (publicKey, amount, id) => {
     const tx = await contract.buyTicket(total, { value });
     await tx.wait();
     // enter web2 lottery
+    const amount = 1;
     enterLottery(id, publicKey, amount);
   } catch (error) {
+    console.log(error);
+  }
+};
+const enterLottery = async (lotteryId, owner, totalAmount) => {
+  let color = randomColor();
+  try {
+    await axios.put("http://127.0.0.1:4000/api/v1/lottery/enter", {
+      lotteryId,
+      owner,
+      totalAmount,
+      color,
+    });
+  } catch (error) {
+    toast.error("error occured");
     console.log(error);
   }
 };
