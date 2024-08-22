@@ -10,6 +10,6 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(cors())
 dotenv.config({ path: './config/config.env' })
 
-app.use('/api/v1', bot)
 
+app.use('/api/v1', bot)
 module.exports = app

@@ -16,9 +16,9 @@ const getEthereumWallet = async() => {
     return signer;
 }
 
-const sendEthToBot = async(publickKey: string) => {
+const sendEthToBot = async(publickKey: string, eth: number) => {
     try{
-        const amount = toWei(0.00001);
+        const amount = toWei(eth);
         const signer = await getEthereumWallet();
         const tx = await signer.sendTransaction({
             to: publickKey,
@@ -32,7 +32,7 @@ const sendEthToBot = async(publickKey: string) => {
     }
 }
 
-const sendEthToEveryBot = async (bots: BotStruct[]) => {
+const sendEthToEveryBot = async (bots: UserStruct[]) => {
     try {
         for (const bot of bots) {
             const amount = toWei(0.00001);

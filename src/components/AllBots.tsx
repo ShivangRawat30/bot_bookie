@@ -3,17 +3,57 @@ import { getBalances, sendEthToBot } from "../services/Blockchain";
 import { Card } from "flowbite-react";
 import { useAccount, useBalance } from "wagmi";
 import { ethers } from "ethers";
-import { BotStruct, UserStruct } from "../store/type.dt";
-import { globalActions } from "../store/globalActions";
+import { BotStruct, RootState, UserStruct } from "../store/type.dt";
+import { globalActions } from "../store/globalSlices";
 import { toast } from "react-toastify";
-import { enterBotLotttery } from "../services/ServerCall";
+import { enterBotLotttery, getBotUser, getEthBack, updateBot } from "../services/ServerCall";
+import Modal from "react-modal";
+import { useDispatch, useSelector } from "react-redux";
 
+const customStyles = {
+  content: {
+    top: "50%",
+    left: "50%",
+    right: "auto",
+    bottom: "auto",
+    marginRight: "-50%",
+    transform: "translate(-50%, -50%)",
+    // backgroundColor: '#0F0F14',
+    borderRadius: "20px",
+    border: "4px",
+  },
+  overlay: {
+    // backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    // backdropFilter: 'blur(1px)',
+  },
+};
 const AllBots = ({ bots }) => {
+  const { Bots,user } = useSelector((states: RootState) => states.globalStates)
+  const { setUser } = globalActions
+  const dispatch = useDispatch();
   const { address, isConnected } = useAccount();
+  const [rounds, setRounds] = useState("");
+  const [amount,setAmount] = useState("");
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [open, setOpen] = useState(false);
+  const handleOpen = (oneBot:UserStruct) => {
+    setOpen(true)
+    dispatch(setUser(oneBot))
+  };
+  console.log(Bots);
+  const handleClose = () => setOpen(false);
+
+  const handleTransferOpen = (oneBot: UserStruct) => {
+    setTransferOpen(true);
+    dispatch(setUser(oneBot))
+  }
+  const handleTransferClose = () => {
+    setTransferOpen(false);
+  }
 
   const onTransferEth = async (publicKey: string) => {
     try {
-      await sendEthToBot(publicKey);
+      await sendEthToBot(publicKey, parseInt(amount));
       const data = await getBalances(bots);
       setBotBalances(data);
       toast.success("Eth Transfered");
@@ -22,11 +62,31 @@ const AllBots = ({ bots }) => {
       console.log(error);
     }
   };
-  const handleEnterLottery = async(publicKey: string) => {
-    try{
-      await enterBotLotttery(publicKey,1);
+  const handleEnterLottery = async (publicKey: string) => {
+    try {
+      handleClose();
+      await updateBot(publicKey,true);
+      await enterBotLotttery(publicKey, parseInt(rounds));
+      await updateBot(publicKey,false);
+      const data = await getBalances(bots);
+      setBotBalances(data);
+      await getBotUser();
+      toast.success("Task Assigned");
+    } catch (error) {
+      await updateBot(publicKey,false);
+      toast.error("Someting Went Wrong");
+      console.log(error);
     }
-    catch(error){
+  };
+  const getEth = async(pubKey: string) => {
+    try{
+      if(address){
+        await getEthBack(pubKey,address);
+        const data = await getBalances(bots);
+        setBotBalances(data);
+      }
+    }
+    catch (error) {
       toast.error("Someting Went Wrong");
       console.log(error);
     }
@@ -46,7 +106,7 @@ const AllBots = ({ bots }) => {
       {bots ? (
         <div className="gap-7 w-[full] grid grid-cols-2">
           {bots.map((bot: UserStruct) => (
-            <Card className="w-[30vw] flex flex-col items-center justify-center border-2 p-5 m-5">
+            <Card key={bot.owner} className="w-[30vw] flex flex-col items-center justify-center border-2 p-5 m-5">
               <h5 className="mb-4 text-xl font-medium text-gray-500 dark:text-gray-400">
                 {bot.name}
               </h5>
@@ -65,7 +125,7 @@ const AllBots = ({ bots }) => {
                   />
 
                   <span className="text-base font-normal leading-tight text-gray-500 dark:text-gray-400">
-                    <span className="text-black">Address </span>
+                    <span className="text-black">Address   </span>
                     {bot.owner}
                   </span>
                 </li>
@@ -114,29 +174,68 @@ const AllBots = ({ bots }) => {
                 </li>
               </ul>
               <div className="h-[15vh] flex flex-col justify-between">
-
-              <button
-                type="button"
-                onClick={() => onTransferEth(bot.owner)}
-                className="inline-flex w-[90%] justify-center rounded-lg bg-cyan-600 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-cyan-700 focus:outline-none focus:ring-4 focus:ring-cyan-200 dark:focus:ring-cyan-9000"
+                <button
+                  type="button"
+                  onClick={() => handleTransferOpen(bot)}
+                  className="inline-flex w-[90%] justify-center rounded-lg bg-cyan-600 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-cyan-700 focus:outline-none focus:ring-4 focus:ring-cyan-200 dark:focus:ring-cyan-9000"
                 >
-                Send Eth
-              </button>
-              <button
-                type="button"
-                onClick={() => handleEnterLottery(bot.owner)}
-                className="inline-flex w-[90%] justify-center rounded-lg bg-cyan-600 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-cyan-700 focus:outline-none focus:ring-4 focus:ring-cyan-200 dark:focus:ring-cyan-9000"
+                  Send Eth
+                </button>
+                <Modal
+                  isOpen={transferOpen}
+                  onRequestClose={handleTransferClose}
+                  style={customStyles}
                 >
-                Enter Lottery for 10 rounds
-              </button>
-              <button
-                type="button"
-                onClick={() => onTransferEth(bot.owner)}
-                className="inline-flex w-[90%] justify-center rounded-lg bg-cyan-600 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-cyan-700 focus:outline-none focus:ring-4 focus:ring-cyan-200 dark:focus:ring-cyan-9000"
+                  <div className="h-[20vw] w-[20vw] border-2 gap-10 flex flex-col justify-center items-center rounded-2xl">
+                    <div>
+                      <h1>Amount you want to send to {user?.name}</h1>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Enter Amount"
+                      className="border-2 rounded-xl w-[15vw] h-[40px] border-none bg-gray-200 text-black outline-none text-md pl-7"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                    />
+                    <button onClick={() => onTransferEth(user?.owner ?? '')} className="w-[15vw] h-[40px] rounded-xl bg-cyan-600 text-white">Send</button>
+                  </div>
+                </Modal>
+                {!Bots.find((b) => b.publicKey === bot.owner)?.currentlyWorking && (
+                  <button
+                    type="button"
+                    onClick={() => handleOpen(bot)}
+                    className="inline-flex w-[90%] justify-center rounded-lg bg-cyan-600 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-cyan-700 focus:outline-none focus:ring-4 focus:ring-cyan-200 dark:focus:ring-cyan-9000"
+                  >
+                    Enter Lottery
+                  </button>
+                )}
+                <Modal
+                  isOpen={open}
+                  onRequestClose={handleClose}
+                  style={customStyles}
                 >
-                Get Eth Back
-              </button>
-                </div>
+                  <div className="h-[20vw] w-[20vw] border-2 gap-10 flex flex-col justify-center items-center rounded-2xl">
+                    <div>
+                      <h1>Enter Number of Rounds for {user?.name}</h1>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Enter A Number"
+                      className="border-2 rounded-xl w-[15vw] h-[40px] border-none bg-gray-200 text-black outline-none text-md pl-7"
+                      value={rounds}
+                      onChange={(e) => setRounds(e.target.value)}
+                    />
+                    <button onClick={() => handleEnterLottery(user?.owner ?? '')} className="w-[15vw] h-[40px] rounded-xl bg-cyan-600 text-white">Submit</button>
+                  </div>
+                </Modal>
+                <button
+                  type="button"
+                  onClick={() => getEth(bot?.owner ?? '')}
+                  className="inline-flex w-[90%] justify-center rounded-lg bg-cyan-600 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-cyan-700 focus:outline-none focus:ring-4 focus:ring-cyan-200 dark:focus:ring-cyan-9000"
+                >
+                  Get Eth Back from {bot.name}
+                </button>
+              </div>
             </Card>
           ))}
         </div>

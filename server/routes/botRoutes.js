@@ -6,6 +6,8 @@ const {
     getAllBots,
     getBotById,
     enterLotteries,
+    updateBot,
+    sendEthBack,
 } = require('../controllers/botController');
 
 // Create a new bot
@@ -18,5 +20,9 @@ router.get('/get/bots', getAllBots);
 router.get('/:id', getBotById);
 
 router.post('/enter/:publicKey/:max', enterLotteries);
+
+router.put('/update/:pubKey/:isWorking', updateBot);
+
+router.get('/get/eth/:pubKey/:userKey', sendEthBack);
 
 module.exports = router;

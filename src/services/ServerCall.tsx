@@ -34,7 +34,7 @@ const getAllBots = async() => {
 const getBotUser = async() => {
     try{
         const botsData = await getAllBots();
-        const pubKeyArray = botsData.map(bot => bot.publicKey);
+        const pubKeyArray = botsData?.map(bot => bot.publicKey);
         console.log(pubKeyArray);
         const response = await axios.post("http://127.0.0.1:4000/api/v1/get/array/users",
             {pubKeyArray}
@@ -77,15 +77,37 @@ const enterBotLotttery = async(publicKey:string, max: number) => {
     }
 }
 
+const updateBot = async(publicKey:string, isWorking:boolean) => {
+    try{
+        const response = await axios.put(`http://127.0.0.1:4001/api/v1/update/${publicKey}/${isWorking}`);
+        // toast.success('Bot Work assigned');
+        await getAllBots();
+    }
+    catch(error){
+        toast.error("error occured");
+        console.log(error)
+    }
+}
+
+const getEthBack = async(pubKey:string, userKey:string) => {
+    try{
+        const response = await axios.get(`http://127.0.0.1:4001/api/v1/get/eth/${pubKey}/${userKey}`);
+        await response.data;
+        toast.success("Got Eth Back");
+    }catch(error){
+        toast.error("error occured");
+        console.log(error)
+    }
+}
+
 
 const structuredBots = (bots: BotStruct[]): BotStruct[] =>
     bots.map((bot) => ({
     publicKey: bot.publicKey,
     privateKey: bot.privateKey,
-    gamesPlayed: bot.gamesPlayed,
-    gamesWon: bot.gamesWon,
-    totalVolume: bot.totalVolume
+    currentlyWorking: bot.currentlyWorking
 }))
+
 
 const structuredUsers = (users: UserStruct[]): UserStruct[] =>
     users.map((user) => ({
@@ -110,5 +132,7 @@ export {
     getAllBots,
     createBot,
     getBotUser,
-    enterBotLotttery
+    enterBotLotttery,
+    updateBot,
+    getEthBack
 }

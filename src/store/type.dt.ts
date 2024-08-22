@@ -1,9 +1,7 @@
 export interface BotStruct {
     publicKey: string,
     privateKey: string,
-    gamesPlayed: number,
-    gamesWon: number,
-    totalVolume: number
+    currentlyWorking: boolean
 }
 export interface UserStruct {
     name: string

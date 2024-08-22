@@ -10,6 +10,10 @@ const botSchema = new mongoose.Schema({
         type: String,
         require: true,
     },
+    iv: {
+        type: String,
+        require: true,
+    },
    currentlyWorking: {
     type: Boolean,
     default: false
