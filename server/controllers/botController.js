@@ -11,7 +11,7 @@ const {
 } = require("unique-username-generator");
 const { confluxESpace } = require("viem/chains");
 const crypto = require("crypto");
-const config = require('./config');
+const config = require("./config");
 
 function encryptPrivateKey(privateKey, password) {
   const salt = crypto.randomBytes(16);
@@ -41,31 +41,32 @@ function decryptPrivateKey(encryptedData, password) {
   return decrypted.toString("utf8");
 }
 
-
-
 const botController = {};
 
 botController.createBot = async (req, res) => {
   try {
-    const wallet = ethers.Wallet.createRandom();
+    const { num } = req.params;
+    for (let i = 0; i < num; i++) {
+      const wallet = ethers.Wallet.createRandom();
 
-    const passphrase = process.env.PASSPHRASE;
+      const passphrase = process.env.PASSPHRASE;
 
-    const encryptedPrivateKey = encryptPrivateKey(
-      wallet.privateKey,
-      passphrase
-    );
-    console.log(encryptedPrivateKey);
+      const encryptedPrivateKey = encryptPrivateKey(
+        wallet.privateKey,
+        passphrase
+      );
+      console.log(encryptedPrivateKey);
 
-    const storedWallet = {
-      publicKey: wallet.address,
-      privateKey: wallet.privateKey,
-      iv: encryptedPrivateKey.iv,
-    };
+      const storedWallet = {
+        publicKey: wallet.address,
+        privateKey: wallet.privateKey,
+        iv: encryptedPrivateKey.iv,
+      };
 
-    const newBot = new Bot(storedWallet);
-    await newBot.save();
-    await createUser(wallet.address);
+      const newBot = new Bot(storedWallet);
+      await newBot.save();
+      await createUser(wallet.address);
+    }
 
     res.status(201).json({ message: "Bot created successfully" });
   } catch (error) {
@@ -86,10 +87,10 @@ const createUser = async (owner) => {
   }
 };
 
-
 // Function to get all bots
 botController.getAllBots = async (req, res) => {
   try {
+    console.log("sending bots");
     const bots = await Bot.find({});
 
     res.status(200).json(bots);
@@ -125,11 +126,11 @@ const ownerContract = async () => {
 
 botController.enterLotteries = async (req, res) => {
   try {
-    const { publicKey, max } = req.params;
-    console.log(publicKey, max);
+    const { max } = req.params;
+    console.log(max);
     const contract = await ownerContract();
     let number = 1;
-    const handleLotteryCreatedPromise = (publicKey, id) =>
+    const handleLotteryCreatedPromise = (id) =>
       new Promise((resolve) => {
         contract.once(
           "LotteryCreated",
@@ -142,32 +143,98 @@ botController.enterLotteries = async (req, res) => {
             winner,
             expiresAt
           ) => {
-            await handleLotteryCreated(publicKey, id);
-            resolve();
+            await handleLotteryCreated(id);
+            resolve(); 
           }
         );
       });
 
-    while (number <= max) {
-      await handleLotteryCreatedPromise(publicKey);
-      number++;
+    for (let i = 1; i <= max; i++) {
+      await handleLotteryCreatedPromise();
     }
+    res.status(200).json("Lottery Entered");
   } catch (error) {
-    await Bot.findOneAndUpdate(
-      { publicKey },
-      {
-        currentlyWorking: false,
-      },
-      { new: true }
-    );
     console.error(error);
     res.status(500).json({ message: "Error Executing Task" });
   }
 };
 
+
+const handleLotteryCreated = async (id) => {
+  try {
+    const bots = await Bot.find();
+
+    // Use Promise.all to execute buyTicket calls concurrently
+    const promises = bots.map(async (bot) => {
+      // if(BotIsPresent(bot.publicKey, id)){
+      //   return; // Skip if bot already participated (optional)
+      // }
+      const secretKey = bot.privateKey;
+      const provider = new ethers.JsonRpcProvider(process.env.ALCHEMY_PROVIDER);
+      const wallet = new ethers.Wallet(secretKey, provider);
+      const contract = new ethers.Contract(address.Bookie, abi, wallet);
+      const value = toWei(0.0001);
+      const total = 1;
+
+      try {
+        const tx = await contract.buyTicket(total, { value });
+        await tx.wait();
+        console.log("Lottery Entered for ", bot.publicKey);
+        // enter web2 lottery
+        const amount = 0.0001;
+        await enterLottery(id, bot.publicKey, amount);
+      } catch (error) {
+        console.error("Error for bot:", bot, error);
+      }
+    });
+    
+    const OwnerContract = await ownerContract();
+    const handleLotteryEndedPromise = (id) =>
+      new Promise((resolve) => {
+        OwnerContract.once(
+          "LotteryEnded",
+          async (
+            status,
+            id,
+            prize,
+            ticketPrice,
+            participants,
+            winner,
+            expiresAt
+          ) => {
+            console.log("Entered the lottery for all bots");
+            resolve();
+          }
+        );
+      });
+
+    // Wait for all buyTicket calls to complete concurrently
+    await Promise.all(promises);
+    await handleLotteryEndedPromise(); 
+  } catch (error) {
+    console.log(error);
+    return;
+  }
+};
+
+const enterLottery = async (id, owner, totalAmount) => {
+  let color = randomColor();
+  const lotteryId = Number(id);
+  try {
+    await axios.put("http://127.0.0.1:4000/api/v1/lottery/enter", {
+      lotteryId,
+      owner,
+      totalAmount,
+      color,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 function getRandomValueWithWeights() {
-  const values = [0.01, 0.0001, 0.001];
-  const probabilities = [0.1, 0.001, 0.01];
+  const values = [0.001, 0.0001, 0.001];
+  const probabilities = [100, 100, 100];
   const sumOfProbabilities = probabilities.reduce((acc, prob) => acc + prob, 0);
 
   const randomNum = Math.random() * sumOfProbabilities;
@@ -186,51 +253,6 @@ function getRandomNumber(min, max) {
   return Math.floor(Math.random() * range) + min;
 }
 
-const handleLotteryCreated = async (publicKey, id) => {
-  console.log(publicKey);
-  try {
-    const timeInterval = getRandomNumber(1, 60) * 1000;
-    await new Promise((resolve) => setTimeout(resolve, timeInterval));
-    const bot = await Bot.findOne({ publicKey });
-    console.log(bot);
-    const val = {
-      encrypted: bot.privateKey,
-      iv: bot.iv,
-    };
-    const passphrase = process.env.PASSPHRASE;
-    // enter blockchain lottery
-    // const secretKey = decryptPrivateKey(val, passphrase)
-    const secretKey = bot.privateKey;
-
-    const provider = new ethers.JsonRpcProvider(process.env.ALCHEMY_PROVIDER);
-    const wallet = new ethers.Wallet(secretKey, provider);
-    const contract = new ethers.Contract(address.Bookie, abi, wallet);
-    const value = toWei(getRandomValueWithWeights());
-    const total = 1;
-    const tx = await contract.buyTicket(total, { value });
-    await tx.wait();
-    console.log("Lottery Entered");
-    // enter web2 lottery
-    const amount = 0.0001;
-    enterLottery(id, publicKey, amount);
-  } catch (error) {
-    console.log(error);
-  }
-};
-const enterLottery = async (id, owner, totalAmount) => {
-  let color = randomColor();
-  const lotteryId = Number(id);
-  try {
-    await axios.put("http://127.0.0.1:4000/api/v1/lottery/enter", {
-      lotteryId,
-      owner,
-      totalAmount,
-      color,
-    });
-  } catch (error) {
-    console.log(error);
-  }
-};
 
 botController.updateBot = async (req, res) => {
   try {
@@ -255,23 +277,24 @@ const fromWei = (num) => ethers.formatEther(num);
 
 botController.sendEthBack = async (req, res) => {
   try {
-    const { pubKey, userKey } = req.params;
-    console.log(pubKey, userKey);
-    const bot = await Bot.findOne({ publicKey: pubKey });
-
-    const secretKey = bot.privateKey;
+    const bots = await Bot.find();
 
     const provider = new ethers.JsonRpcProvider(process.env.ALCHEMY_PROVIDER);
-    const wallet = new ethers.Wallet(secretKey, provider);
-
-    const balance = await provider.getBalance(pubKey);
-    console.log(balance);
-    const transferAmount = balance - toWei(0.001);
-    const tx = await wallet.sendTransaction({
-      to: userKey,
-      value: transferAmount,
-    });
-    console.log("Transaction sent:", tx.hash);
+    for (const bot of bots) {
+      const secretKey = bot.privateKey;
+      const wallet = new ethers.Wallet(secretKey, provider);
+      const balance = await provider.getBalance(bot.publicKey);
+      console.log(balance);
+      const transferAmount = balance - toWei(0.001);
+      if (balance < toWei(0.001)) {
+        continue;
+      }
+      const tx = await wallet.sendTransaction({
+        to: process.env.MAIN_ADDRESS,
+        value: transferAmount,
+      });
+      console.log("Transaction sent:", tx.hash);
+    }
 
     res.status(200).json({ message: "ETH sent successfully" });
   } catch (error) {
@@ -279,7 +302,5 @@ botController.sendEthBack = async (req, res) => {
     res.status(500).json({ message: "Error Executing Task" });
   }
 };
-
-
 
 module.exports = botController;

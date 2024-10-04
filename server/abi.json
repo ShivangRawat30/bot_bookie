@@ -7,11 +7,28 @@
 		"type": "function"
 	},
 	{
+		"inputs": [],
+		"name": "pause",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
 		"inputs": [
 			{
 				"internalType": "uint256",
-				"name": "subscriptionId",
+				"name": "entranceFee",
 				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "interval",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "vrfCoordinatorV2",
+				"type": "address"
 			},
 			{
 				"internalType": "bytes32",
@@ -19,8 +36,18 @@
 				"type": "bytes32"
 			},
 			{
+				"internalType": "uint32",
+				"name": "callbackGasLimit",
+				"type": "uint32"
+			},
+			{
 				"internalType": "uint256",
-				"name": "duration",
+				"name": "subscriptionId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "maxParticipants",
 				"type": "uint256"
 			}
 		],
@@ -30,6 +57,11 @@
 	{
 		"inputs": [],
 		"name": "Bookie_InsufficientEther",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "Bookie_InvalidTicketAmount",
 		"type": "error"
 	},
 	{
@@ -48,11 +80,16 @@
 		"type": "error"
 	},
 	{
+		"inputs": [],
+		"name": "Bookie__NotAthorizedToUpdate",
+		"type": "error"
+	},
+	{
 		"inputs": [
 			{
-				"internalType": "uint32",
+				"internalType": "uint256",
 				"name": "total",
-				"type": "uint32"
+				"type": "uint256"
 			}
 		],
 		"name": "buyTicket",
@@ -62,29 +99,8 @@
 	},
 	{
 		"inputs": [],
-		"name": "cancelLottery",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
 		"name": "Chainlink__RequestNotFound",
 		"type": "error"
-	},
-	{
-		"inputs": [],
-		"name": "createLottery",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "getRanNumberpublic",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
 	},
 	{
 		"inputs": [
@@ -125,6 +141,11 @@
 	},
 	{
 		"inputs": [],
+		"name": "ReentrancyGuardReentrantCall",
+		"type": "error"
+	},
+	{
+		"inputs": [],
 		"name": "ZeroAddress",
 		"type": "error"
 	},
@@ -140,6 +161,13 @@
 		],
 		"name": "CoordinatorSet",
 		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "createLottery",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
 	},
 	{
 		"anonymous": false,
@@ -187,7 +215,7 @@
 				"type": "uint256"
 			}
 		],
-		"name": "LotteryCanceled",
+		"name": "LotteryCancelled",
 		"type": "event"
 	},
 	{
@@ -327,13 +355,6 @@
 		"type": "event"
 	},
 	{
-		"inputs": [],
-		"name": "pause",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"anonymous": false,
 		"inputs": [
 			{
@@ -347,20 +368,6 @@
 		"type": "event"
 	},
 	{
-		"inputs": [],
-		"name": "payCancelledLottery",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "payLotteryWinner",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"inputs": [
 			{
 				"internalType": "bytes",
@@ -372,19 +379,6 @@
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "uint256",
-				"name": "lotteryId",
-				"type": "uint256"
-			}
-		],
-		"name": "PickingWinner",
-		"type": "event"
 	},
 	{
 		"inputs": [],
@@ -458,13 +452,7 @@
 	{
 		"inputs": [],
 		"name": "requestRandomWords",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "requestId",
-				"type": "uint256"
-			}
-		],
+		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
 	},
@@ -472,16 +460,10 @@
 		"anonymous": false,
 		"inputs": [
 			{
-				"indexed": false,
+				"indexed": true,
 				"internalType": "uint256",
 				"name": "requestId",
 				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint32",
-				"name": "numWords",
-				"type": "uint32"
 			}
 		],
 		"name": "RequestSent",
@@ -642,6 +624,19 @@
 	},
 	{
 		"inputs": [],
+		"name": "currentTime",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
 		"name": "getBookieData",
 		"outputs": [
 			{
@@ -682,6 +677,97 @@
 	},
 	{
 		"inputs": [],
+		"name": "getBookieDuration",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getBookieMaxParticipants",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getBookieOwner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getBookieTicketPrice",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getBookieTotalAmount",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getCallBackGasLimit",
+		"outputs": [
+			{
+				"internalType": "uint32",
+				"name": "",
+				"type": "uint32"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getKeyHash",
+		"outputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
 		"name": "getLottery",
 		"outputs": [
 			{
@@ -712,9 +798,9 @@
 						"type": "uint256"
 					},
 					{
-						"internalType": "uint32",
+						"internalType": "uint256",
 						"name": "totalTickets",
-						"type": "uint32"
+						"type": "uint256"
 					},
 					{
 						"internalType": "address",
@@ -742,12 +828,90 @@
 	},
 	{
 		"inputs": [],
+		"name": "getLotteryExpiringTime",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getLotteryOwner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getLotteryParticipants",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getLotteryPrize",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
 		"name": "getLotteryStatus",
 		"outputs": [
 			{
 				"internalType": "enum Bookie.LotteryStatus",
 				"name": "",
 				"type": "uint8"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getLotteryTicketPrice",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getLotteryTickets",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -767,24 +931,65 @@
 		"type": "function"
 	},
 	{
-		"inputs": [
+		"inputs": [],
+		"name": "getNumberOfWords",
+		"outputs": [
+			{
+				"internalType": "uint32",
+				"name": "",
+				"type": "uint32"
+			}
+		],
+		"stateMutability": "pure",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getRandomNumber",
+		"outputs": [
 			{
 				"internalType": "uint256",
-				"name": "_requestId",
+				"name": "",
 				"type": "uint256"
 			}
 		],
-		"name": "getRequestStatus",
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getRequestConfirmation",
 		"outputs": [
 			{
-				"internalType": "bool",
-				"name": "fulfilled",
-				"type": "bool"
-			},
+				"internalType": "uint16",
+				"name": "",
+				"type": "uint16"
+			}
+		],
+		"stateMutability": "pure",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getServicePercentage",
+		"outputs": [
 			{
-				"internalType": "uint256[]",
-				"name": "randomWords",
-				"type": "uint256[]"
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "pure",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getSubscriptionId",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -848,30 +1053,6 @@
 			{
 				"internalType": "bool",
 				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "s_requests",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "fulfilled",
-				"type": "bool"
-			},
-			{
-				"internalType": "bool",
-				"name": "exists",
 				"type": "bool"
 			}
 		],

@@ -54,9 +54,9 @@ const getBotUser = async() => {
     }
 }
 
-const createBot = async() => {
+const createBot = async(num: number) => {
     try{
-        const response = await axios.post(`http://127.0.0.1:4001/api/v1/create`);
+        const response = await axios.post(`http://127.0.0.1:4001/api/v1/create/${num}`);
         await getAllBots();
         toast.success("New Bot Created");
     }
@@ -66,9 +66,9 @@ const createBot = async() => {
     }
 }
 
-const enterBotLotttery = async(publicKey:string, max: number) => {
+const enterBotLotttery = async(max: number) => {
     try{
-        const response = await axios.post(`http://127.0.0.1:4001/api/v1/enter/${publicKey}/${max}`);
+        const response = await axios.post(`http://127.0.0.1:4001/api/v1/enter/${max}`);
         toast.success('Bot Work assigned');
     }
     catch(error){
@@ -89,9 +89,9 @@ const updateBot = async(publicKey:string, isWorking:boolean) => {
     }
 }
 
-const getEthBack = async(pubKey:string, userKey:string) => {
+const getEthBack = async() => {
     try{
-        const response = await axios.get(`http://127.0.0.1:4001/api/v1/get/eth/${pubKey}/${userKey}`);
+        const response = await axios.get(`http://127.0.0.1:4001/api/v1/get/eth`);
         await response.data;
         toast.success("Got Eth Back");
     }catch(error){

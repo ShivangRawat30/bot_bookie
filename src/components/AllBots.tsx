@@ -173,7 +173,7 @@ const AllBots = ({ bots }) => {
                   </div>
                 </li>
               </ul>
-              <div className="h-[15vh] flex flex-col justify-between">
+              <div className="h-[5vh] flex flex-col justify-between">
                 <button
                   type="button"
                   onClick={() => handleTransferOpen(bot)}
@@ -200,41 +200,6 @@ const AllBots = ({ bots }) => {
                     <button onClick={() => onTransferEth(user?.owner ?? '')} className="w-[15vw] h-[40px] rounded-xl bg-cyan-600 text-white">Send</button>
                   </div>
                 </Modal>
-                {!Bots.find((b) => b.publicKey === bot.owner)?.currentlyWorking && (
-                  <button
-                    type="button"
-                    onClick={() => handleOpen(bot)}
-                    className="inline-flex w-[90%] justify-center rounded-lg bg-cyan-600 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-cyan-700 focus:outline-none focus:ring-4 focus:ring-cyan-200 dark:focus:ring-cyan-9000"
-                  >
-                    Enter Lottery
-                  </button>
-                )}
-                <Modal
-                  isOpen={open}
-                  onRequestClose={handleClose}
-                  style={customStyles}
-                >
-                  <div className="h-[20vw] w-[20vw] border-2 gap-10 flex flex-col justify-center items-center rounded-2xl">
-                    <div>
-                      <h1>Enter Number of Rounds for {user?.name}</h1>
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="Enter A Number"
-                      className="border-2 rounded-xl w-[15vw] h-[40px] border-none bg-gray-200 text-black outline-none text-md pl-7"
-                      value={rounds}
-                      onChange={(e) => setRounds(e.target.value)}
-                    />
-                    <button onClick={() => handleEnterLottery(user?.owner ?? '')} className="w-[15vw] h-[40px] rounded-xl bg-cyan-600 text-white">Submit</button>
-                  </div>
-                </Modal>
-                <button
-                  type="button"
-                  onClick={() => getEth(bot?.owner ?? '')}
-                  className="inline-flex w-[90%] justify-center rounded-lg bg-cyan-600 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-cyan-700 focus:outline-none focus:ring-4 focus:ring-cyan-200 dark:focus:ring-cyan-9000"
-                >
-                  Get Eth Back from {bot.name}
-                </button>
               </div>
             </Card>
           ))}
