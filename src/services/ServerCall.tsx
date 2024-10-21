@@ -31,6 +31,29 @@ const getAllBots = async() => {
     }
 }
 
+const getEthPrice = async () => {
+    try {
+      const options = {
+        method: 'GET',
+        headers: {
+          accept: 'application/json',
+          'X-API-KEY': process.env.COIN_API_KEY,
+        },
+      }
+  
+      const response = await axios.get(
+        'https://openapiv1.coinstats.app/coins/ethereum?currency=USD',
+        options
+      )
+  
+      const data = await response.data
+      
+      return data.price;
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
 const getBotUser = async() => {
     try{
         const botsData = await getAllBots();
@@ -47,6 +70,18 @@ const getBotUser = async() => {
         store.dispatch(setUsers(structUsers));
         console.log(structUsers);
         return structUsers
+    }
+    catch(error){
+        toast.error("error occured");
+        console.log(error)
+    }
+}
+
+const getTotalUsers = async() => {
+    try{
+        const response = await axios.get("http://127.0.0.1:4000/api/v1/get/all/users");
+        const totalUsers = response.data;
+        return totalUsers;
     }
     catch(error){
         toast.error("error occured");
@@ -100,6 +135,48 @@ const getEthBack = async() => {
     }
 }
 
+const addAmountSpent = async(amount: any) => {
+    try{
+        const response = await axios.put(`http://127.0.0.1:4001/api/v1/add/amountspent`,
+                {amount}
+        );
+        await response.data;
+        console.log("Amount Spent added");
+        toast.success("Amount Spent added");
+    } catch(error) {
+        toast.error("error occured");
+        console.log(error)
+    }
+}
+
+const addAmountEarned = async(amount: any) => {
+    try{
+        const response = await axios.put(`http://127.0.0.1:4001/api/v1/add/amountearned`,
+                {amount}
+        );
+        await response.data;
+        console.log("Amount Earned added");
+        toast.success("Amount Earned added");
+
+    } catch(error) {
+        toast.error("error occured");
+        console.log(error)
+    }
+}
+
+const getBookieData = async () => {
+    try{
+        const response = await axios.get(`http://127.0.0.1:4001/api/v1/get/all/data`);
+        console.log(
+            "bookie data ",response.data);
+        toast.success("Amount Earned added");
+        return response.data;
+    } catch(error) {
+        toast.error("error occured");
+        console.log(error)
+    }
+}
+
 
 const structuredBots = (bots: BotStruct[]): BotStruct[] =>
     bots.map((bot) => ({
@@ -134,5 +211,9 @@ export {
     getBotUser,
     enterBotLotttery,
     updateBot,
-    getEthBack
+    getEthBack,
+    getEthPrice,
+    getTotalUsers,
+    addAmountSpent,
+    getBookieData
 }

@@ -5,6 +5,7 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
 const bot = require("./routes/botRoutes");
+const bookieRoute = require("./routes/bookieRoute");
 const { ethers } = require("ethers");
 const address = require("./contractAddress.json");
 const abi = require("./abi.json");
@@ -21,7 +22,7 @@ const handleLotteryCreated = async (
   id,
   prize,
   ticketPrice,
-  participants,
+  participants, 
   winner,
   expiresAt
 ) => {
@@ -59,9 +60,10 @@ const handleLotteryCreated = async (
 
     if (matchingBots == 0 && players.data.players.length == 0 ) {
       let start = 1;
+      let end = Math.floor(Math.random() * 5) + 1;
       for (let bot of bots) {
         const balance = await provider.getBalance(bot.publicKey);
-        if (start === 4 && toWei(balance) < ticketPrice) {
+        if (start === end && toWei(balance) < ticketPrice) {
           return;
         }
         const secretKey = bot.privateKey;
@@ -94,7 +96,7 @@ const enterLottery = async (id, owner, totalAmount) => {
         color,
       });
     } catch (error) {
-      // console.log(error);
+      console.log(error);
     }
   };
 
@@ -108,4 +110,5 @@ const toWei = (num) => ethers.parseEther(num.toString());
 const fromWei = (num) => ethers.formatEther(num);
 
 app.use("/api/v1", bot);
+app.use("/api/v1", bookieRoute);
 module.exports = app;

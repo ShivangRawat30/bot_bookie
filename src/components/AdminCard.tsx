@@ -40,6 +40,12 @@ const AdminCard = () => {
     setRoundOpen(false);
    }
 
+  //  const addbots = getAllBots();
+  //  const currentAmount = 0;
+  //  for(let i=0; i<addbots.length; i++) {
+  //   currentAmount += addbots[i].
+  //  }
+
   const onTransferEth = async () => {
     try {
       handleTransferClose();
@@ -75,10 +81,10 @@ const AdminCard = () => {
 
   return (
     <div className="w-full h-[30vh]">
-      <div className="w-[60vw] h-[30vh] border-2 p-5 items-center justify-center flex flex-col gap-3">
+      <div className="w-[30vw] h-[30vh] border-2 p-5 items-center justify-center flex flex-col gap-3">
         <h1 className="text-3xl font-black">Admin Control</h1>
         <div className="flex gap-10">
-          <h1 className="text-xl font-black">Admin Address</h1>
+          <h1 className="text-xl font-black"> Address</h1>
           <h1 className="text-xl">{process.env.ADMIN_ADDRESS}</h1>
         </div>
         <div className="flex gap-10">

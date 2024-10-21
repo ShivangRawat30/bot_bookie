@@ -99,24 +99,25 @@ const AllBots = ({ bots }) => {
       setBotBalances(data);
     };
     fetchBalances();
+    console.log(botBalances);
   }, [bots]);
 
   return (
     <div className="text-black">
       {bots ? (
-        <div className="gap-7 w-[full] grid grid-cols-2">
+        <div className="gap-2 w-[full] grid grid-cols-3">
           {bots.map((bot: UserStruct) => (
-            <Card key={bot.owner} className="w-[30vw] flex flex-col items-center justify-center border-2 p-5 m-5">
-              <h5 className="mb-4 text-xl font-medium text-gray-500 dark:text-gray-400">
+            <Card key={bot.owner} className="w-[20vw] flex flex-col items-center justify-center border-2 p-2 m-5">
+              <h5 className="mb-2 text-xl font-medium text-gray-500 dark:text-gray-400">
                 {bot.name}
               </h5>
               <div className="flex items-baseline text-gray-900 dark:text-white">
-                <span className="text-3xl font-extrabold tracking-tight text-black">
+                <span className="text-2xl font-extrabold tracking-tight text-black">
                   <span className="text-gray-500 text-xl">Balance </span>
                   {botBalances[bot.owner]}
                 </span>
               </div>
-              <ul className="my-7 space-y-5">
+              <ul className="my-3 space-y-5">
                 <li className="flex space-x-3">
                   <path
                     fillRule="evenodd"
